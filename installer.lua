@@ -1,4 +1,4 @@
--- Required Libraries
+-- Required Libraries wget -fq "https://raw.githubusercontent.com/arthurzuiev/OS/main/installer.lua" "/installer.lua"
 local component = require("component")
 local internet = require("internet")
 local fs = require("filesystem")

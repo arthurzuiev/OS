@@ -1,8 +1,12 @@
 -- installer.lua
 
+local component = require("component")
+local shell = require("shell")
+local fs = require("filesystem")
+local internet = require("internet")
+
 -- Function to check for internet access (internet card availability)
 local function checkInternetAccess()
-    local component = require("component")
     local internetCard = component.internet
     if internetCard then
         print("Internet access confirmed!")
@@ -13,17 +17,27 @@ local function checkInternetAccess()
     end
 end
 
--- Function to download all files from GitHub repo
-local function downloadFilesFromGithub(repoUrl)
-    local shell = require("shell")
-    local wget = shell.execute("wget -r -np -nH --cut-dirs=3 -R index.html " .. repoUrl)
-    if wget then
-        print("Files successfully downloaded!")
-        return true
-    else
-        print("Error: Failed to download files from GitHub.")
+-- Function to download file from URL
+local function downloadFile(url, path)
+    local response, err = internet.request(url)
+    if not response then
+        print("Failed to download: " .. err)
         return false
     end
+
+    local file = fs.open(path, "w")
+    if not file then
+        print("Failed to open file for writing.")
+        return false
+    end
+
+    -- Read response and write to the file
+    local content = response.readAll()
+    file:write(content)
+    file:close()
+
+    print("File downloaded successfully to " .. path)
+    return true
 end
 
 -- Function to run init.lua after installation
@@ -44,9 +58,11 @@ local function runInstaller()
         return
     end
 
-    -- Step 2: Download files from GitHub repo
-    local repoUrl = "https://github.com/arthurzuiev/OS.git"
-    if not downloadFilesFromGithub(repoUrl) then
+    -- Step 2: Download the installer file from GitHub
+    local repoUrl = "https://raw.githubusercontent.com/arthurzuiev/OS/main/installer.lua"
+    local localPath = "/installer.lua"  -- Save in the root directory
+
+    if not downloadFile(repoUrl, localPath) then
         return
     end
 

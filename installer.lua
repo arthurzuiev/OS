@@ -11,7 +11,7 @@ local config = {
     }
 }
 
-local gitAPIreposURL = "https://api.github.com/repos/"
+local gitbaseURL = "https://api.github.com/repos/"
 
 -- constants
 local NO_RESOURCE_ERR = 6
@@ -24,7 +24,6 @@ local function throwError(msg, errCode)
 end
 
 local function installJSON()
-    shell.execute('mkdir /lib')
     shell.execute('wget -fq "https://raw.githubusercontent.com/rater193/OpenComputers-1.7.10-Base-Monitor/master/lib/json.lua" "/lib/json.lua"')
     json = require("json")
 end
@@ -46,11 +45,11 @@ end
 -- core functionality 
 local function stringifyResponse(response)
     local res = ""
-    local resp = response()
+    local resp = response
 
     while(resp~=nil) do
         res = ret..tostring(resp)
-        resp = responce()
+        resp = responce
     end
 
     return res
@@ -60,11 +59,8 @@ local function httpRequst(url)
     local stringifiedResponse = nil
 
     local success, response = internet.request(url)
-    if (success) then
-        stringifiedResponse = stringifyResponse(response)
-    end
 
-    return stringifiedResponse
+    return success
 end
 
 local function downloadRepoTree(treeDataURL, parentdir)
@@ -89,7 +85,7 @@ local function downloadRepoTree(treeDataURL, parentdir)
 end
 
 local function getTreedataURL()
-    local mainData = httpRequst(gitbaseURL..tostring(config.git.name).."/"..tostring(config.git.repo).."/master")
+    local mainData = httpRequst(gitbaseURL..tostring(config.git.name).."/"..tostring(config.git.repo).."/git/refs")
 
     if (mainData) then
         local git = json.decode(data)[1].object

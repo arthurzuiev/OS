@@ -1,22 +1,22 @@
 -- installer.lua
 
--- Function to check for internet access (modem availability)
+-- Function to check for internet access (internet card availability)
 local function checkInternetAccess()
     local component = require("component")
-    local modem = component.modem
-    if modem and modem.isOpen(1) then
+    local internetCard = component.internet
+    if internetCard then
         print("Internet access confirmed!")
         return true
     else
-        print("Error: No internet access detected.")
+        print("Error: No internet access detected. Please connect an internet card.")
         return false
     end
 end
 
 -- Function to download all files from GitHub repo
-local function downloadFilesFromGithub(repoUrl, destination)
+local function downloadFilesFromGithub(repoUrl)
     local shell = require("shell")
-    local wget = shell.execute("wget -r -np -nH --cut-dirs=3 -R index.html " .. repoUrl .. " -P " .. destination)
+    local wget = shell.execute("wget -r -np -nH --cut-dirs=3 -R index.html " .. repoUrl)
     if wget then
         print("Files successfully downloaded!")
         return true
@@ -46,8 +46,7 @@ local function runInstaller()
 
     -- Step 2: Download files from GitHub repo
     local repoUrl = "https://github.com/arthurzuiev/OS.git"
-    local destination = "/home/arthur/os/"
-    if not downloadFilesFromGithub(repoUrl, destination) then
+    if not downloadFilesFromGithub(repoUrl) then
         return
     end
 

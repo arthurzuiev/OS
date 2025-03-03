@@ -1,1 +1,3 @@
-print("TESTING TRANSFER")
+local bootloader = require("bootloader")
+
+bootloader.bootloader.load()

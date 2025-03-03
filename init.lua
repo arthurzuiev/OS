@@ -1,14 +1,15 @@
--- Accessing the GPU component without require
-local component = component
-local gpu = _G.component.proxy(component.list("gpu")())
+-- init.lua
 
--- Set the screen resolution (optional)
-gpu.setResolution(80, 25)  -- Example: 80 characters wide, 25 rows tall
+-- Access the file system component
+local fs = component.proxy(component.list("filesystem")())
 
--- Display text at the top-left corner (0, 0)
-gpu.set(1, 1, "Hello from BIOS!")
+-- Open bootloader.lua
+local file = fs.open("boot/bootloader.lua", "r")
+local bootloader_code = fs.read(file, fs.size(file))  -- Read the entire file
+fs.close(file)
 
--- dont halt it
-while true do
-  computer.pullSignal()
-end
+-- Compile and execute the bootloader code
+local bootloader = load(bootloader_code)
+
+-- Run the bootloader
+bootloader()

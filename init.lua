@@ -1,3 +1,3 @@
 local bootloader = require("bootloader")
 
-bootloader.bootloader.load()
+bootloader.load()

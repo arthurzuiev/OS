@@ -1,10 +1,9 @@
 -- installer.lua
 
 local component = require("component")
-local shell = require("shell")
-local fs = require("filesystem")
 local internet = require("internet")
-local json = require("json")  -- To parse the GitHub API JSON response
+local fs = require("filesystem")
+local shell = require("shell")
 
 -- Function to check for internet access (internet card availability)
 local function checkInternetAccess()
@@ -28,11 +27,10 @@ local function downloadFile(url, path)
 
     local file = fs.open(path, "w")
     if not file then
-        print("Failed to open file for writing.")
+        print("Failed to open file for writing: " .. path)
         return false
     end
 
-    -- Read response and write to the file
     local content = response.readAll()
     file:write(content)
     file:close()
@@ -43,7 +41,7 @@ end
 
 -- Function to get the list of files from the GitHub repository
 local function getGitHubRepoFiles(repoUrl)
-    local apiUrl = repoUrl .. "/contents"  -- GitHub API endpoint to get the contents of the repo
+    local apiUrl = repoUrl .. "/contents"
     local response, err = internet.request(apiUrl)
     if not response then
         print("Failed to fetch repository contents: " .. err)
@@ -51,10 +49,13 @@ local function getGitHubRepoFiles(repoUrl)
     end
 
     local content = response.readAll()
-    local files, err = json.decode(content)  -- Parse JSON response
-    if not files then
-        print("Failed to parse GitHub response: " .. err)
-        return nil
+    local files = {}
+    for line in content:gmatch("[^\r\n]+") do
+        local fileUrl = line:match('"download_url": "(.-)"')
+        local fileName = line:match('"name": "(.-)"')
+        if fileUrl and fileName then
+            table.insert(files, {url = fileUrl, name = fileName})
+        end
     end
 
     return files
@@ -63,13 +64,11 @@ end
 -- Function to download all files in the repository
 local function downloadRepoFiles(repoUrl, files)
     for _, file in ipairs(files) do
-        local fileUrl = file.download_url
-        local filePath = "/" .. file.name  -- Save in the root directory
-        if file.type == "file" then
-            -- Download and save the file
-            if not downloadFile(fileUrl, filePath) then
-                print("Failed to download file: " .. file.name)
-            end
+        local fileUrl = file.url
+        local fileName = file.name
+        local filePath = "/" .. fileName
+        if not downloadFile(fileUrl, filePath) then
+            print("Failed to download file: " .. fileName)
         end
     end
 end
@@ -87,23 +86,18 @@ end
 
 -- Main installer function
 local function runInstaller()
-    -- Step 1: Check internet access
     if not checkInternetAccess() then
         return
     end
 
-    -- Step 2: Get the list of files in the GitHub repository
-    local repoUrl = "https://api.github.com/repos/arthurzuiev/OS"  -- GitHub API URL for your repo
+    local repoUrl = "https://api.github.com/repos/arthurzuiev/OS"
     local files = getGitHubRepoFiles(repoUrl)
 
     if not files then
         return
     end
 
-    -- Step 3: Download all files in the repository
     downloadRepoFiles(repoUrl, files)
-
-    -- Step 4: Run init.lua after download
     runInit()
 end
 

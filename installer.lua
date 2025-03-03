@@ -36,35 +36,56 @@ local function confirmInternetAccess()
     end
 end
 
+-- Utility Function to Fetch Data
 local function httpRequest(url)
-    local success, response = internet.request(url)
+    print("Fetching URL: " .. url)  -- Debug print for the URL being fetched
+    local success, response = pcall(function() return internet.request(url) end)
+    
     if not success then
         throwError("Failed to fetch data from: " .. url, GENERAL_ERR)
     end
+    
     local data = ""
     for chunk in response do
         data = data .. chunk
     end
+    
+    -- Check if the data is empty (potentially an empty file)
+    if data == "" then
+        throwError("The file at " .. url .. " is empty or does not contain valid data.", GENERAL_ERR)
+    end
+    
     return data
 end
 
+-- Function to Download Repo Tree
 local function downloadRepoTree(treeDataURL, parentDir)
     parentDir = parentDir or ""
     local treeData = json.decode(httpRequest(treeDataURL))
+    
     for _, child in ipairs(treeData.tree) do
         local filename = parentDir .. "/" .. child.path
+        print("Processing file: " .. filename)  -- Debug print to see which file is being processed
+        
         if child.type == "tree" then
             downloadRepoTree(child.url, filename)
         else
-            shell.execute('rm -f "' .. filename .. '"')
+            -- Check if the file exists before downloading
             local fileData = httpRequest("https://raw.githubusercontent.com/" .. config.git.owner .. "/" .. config.git.repo .. "/main/" .. filename)
-            local file = fs.open(filename, "w")
-            file:write(fileData)
-            file:close()
+            if fileData == "" then
+                print("Warning: File is empty: " .. filename)
+            else
+                -- Proceed with downloading and saving the file
+                shell.execute('rm -f "' .. filename .. '"')
+                local file = fs.open(filename, "w")
+                file:write(fileData)
+                file:close()
+            end
         end
     end
 end
 
+-- Function to Get Tree Data URL
 local function getTreeDataURL()
     local refsData = httpRequest("https://api.github.com/repos/" .. config.git.owner .. "/" .. config.git.repo .. "/git/refs/heads/main")
     local refs = json.decode(refsData)

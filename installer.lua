@@ -4,6 +4,7 @@ local component = require("component")
 local shell = require("shell")
 local fs = require("filesystem")
 local internet = require("internet")
+local json = require("json")  -- To parse the GitHub API JSON response
 
 -- Function to check for internet access (internet card availability)
 local function checkInternetAccess()
@@ -40,6 +41,39 @@ local function downloadFile(url, path)
     return true
 end
 
+-- Function to get the list of files from the GitHub repository
+local function getGitHubRepoFiles(repoUrl)
+    local apiUrl = repoUrl .. "/contents"  -- GitHub API endpoint to get the contents of the repo
+    local response, err = internet.request(apiUrl)
+    if not response then
+        print("Failed to fetch repository contents: " .. err)
+        return nil
+    end
+
+    local content = response.readAll()
+    local files, err = json.decode(content)  -- Parse JSON response
+    if not files then
+        print("Failed to parse GitHub response: " .. err)
+        return nil
+    end
+
+    return files
+end
+
+-- Function to download all files in the repository
+local function downloadRepoFiles(repoUrl, files)
+    for _, file in ipairs(files) do
+        local fileUrl = file.download_url
+        local filePath = "/" .. file.name  -- Save in the root directory
+        if file.type == "file" then
+            -- Download and save the file
+            if not downloadFile(fileUrl, filePath) then
+                print("Failed to download file: " .. file.name)
+            end
+        end
+    end
+end
+
 -- Function to run init.lua after installation
 local function runInit()
     print("Running init.lua...")
@@ -58,15 +92,18 @@ local function runInstaller()
         return
     end
 
-    -- Step 2: Download the installer file from GitHub
-    local repoUrl = "https://raw.githubusercontent.com/arthurzuiev/OS/main/installer.lua"
-    local localPath = "/installer.lua"  -- Save in the root directory
+    -- Step 2: Get the list of files in the GitHub repository
+    local repoUrl = "https://api.github.com/repos/arthurzuiev/OS"  -- GitHub API URL for your repo
+    local files = getGitHubRepoFiles(repoUrl)
 
-    if not downloadFile(repoUrl, localPath) then
+    if not files then
         return
     end
 
-    -- Step 3: Run init.lua after download
+    -- Step 3: Download all files in the repository
+    downloadRepoFiles(repoUrl, files)
+
+    -- Step 4: Run init.lua after download
     runInit()
 end
 

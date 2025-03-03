@@ -57,32 +57,51 @@ local function httpRequest(url)
     return data
 end
 
+-- Function to Ensure Directory Exists
+local function ensureDirectoryExists(filePath)
+    local dir = fs.path(filePath)
+    if not fs.exists(dir) then
+        fs.makeDirectory(dir)
+    end
+end
+
 -- Function to Download Repo Tree
 local function downloadRepoTree(treeDataURL, parentDir)
     parentDir = parentDir or ""
     local treeData = json.decode(httpRequest(treeDataURL))
-    
+
     for _, child in ipairs(treeData.tree) do
         local filename = parentDir .. "/" .. child.path
-        print(filename)
-        
+        print("Processing: " .. filename)
+
         if child.type == "tree" then
+            -- It's a directory, so create it and recursively download its contents
+            ensureDirectoryExists(filename)
             downloadRepoTree(child.url, filename)
         else
-            -- Check if the file exists before downloading
+            -- It's a file, so download it and write it to the correct path
+            ensureDirectoryExists(filename) -- Make sure the directory exists before writing the file
+            
             local fileData = httpRequest("https://raw.githubusercontent.com/" .. config.git.owner .. "/" .. config.git.repo .. "/main/" .. filename)
             if fileData == "" then
                 print("Warning: File is empty: " .. filename)
             else
                 -- Proceed with downloading and saving the file
                 shell.execute('rm -f "' .. filename .. '"')
-                local file = io.open(filename, "w")
-                file:write(fileData)
-                file:close()
+                
+                -- Open the file and write to it
+                local file, err = io.open(filename, "w")
+                if not file then
+                    print("Error: Failed to open file for writing: " .. err)
+                else
+                    file:write(fileData)
+                    file:close()
+                end
             end
         end
     end
 end
+
 
 -- Function to Get Tree Data URL
 local function getTreeDataURL()

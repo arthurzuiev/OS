@@ -19,7 +19,7 @@ local GENERAL_ERR = 1
 
 -- Utility Functions
 local function throwError(msg, errCode)
-    print(msg)
+    error(msg)
     os.exit(errCode)
 end
 
@@ -38,7 +38,6 @@ end
 
 -- Utility Function to Fetch Data
 local function httpRequest(url)
-    print("Fetching URL: " .. url)  -- Debug print for the URL being fetched
     local success, response = pcall(function() return internet.request(url) end)
     
     if not success then
@@ -65,7 +64,7 @@ local function downloadRepoTree(treeDataURL, parentDir)
     
     for _, child in ipairs(treeData.tree) do
         local filename = parentDir .. "/" .. child.path
-        print("Processing file: " .. filename)  -- Debug print to see which file is being processed
+        print(filename)
         
         if child.type == "tree" then
             downloadRepoTree(child.url, filename)
@@ -77,7 +76,7 @@ local function downloadRepoTree(treeDataURL, parentDir)
             else
                 -- Proceed with downloading and saving the file
                 shell.execute('rm -f "' .. filename .. '"')
-                local file = fs.open(filename, "w")
+                local file = io.open(filename, "w")
                 file:write(fileData)
                 file:close()
             end

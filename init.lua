@@ -1,6 +1,6 @@
 -- Accessing the GPU component without require
 local component = component
-local gpu = component.gpu
+local gpu = _G.component.proxy(component.list("gpu")())
 
 -- Set the screen resolution (optional)
 gpu.setResolution(80, 25)  -- Example: 80 characters wide, 25 rows tall

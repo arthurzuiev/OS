@@ -60,7 +60,9 @@ local function httpRequst(url)
 
     local success, response = internet.request(url)
 
-    return success
+    print(sucess, repsonse)
+
+    return response
 end
 
 local function downloadRepoTree(treeDataURL, parentdir)

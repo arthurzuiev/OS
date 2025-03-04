@@ -1,6 +1,6 @@
 -- variables
 local gpu = component.proxy(component.list("gpu")())  -- Access the GPU component
-local fs = component.proxy(component.list("filesystem")()) -- Access the Filesystem component
+local fs = component.proxy(component.list("filesystem")()) -- Access the Filesystem component really big changes
 
 -- graphics config
 local initResolutionX = 50

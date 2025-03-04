@@ -22,8 +22,8 @@ githubClient.ensureDirExists = function(filePath)
     end
 end
 
-githubClient.getRepoData = function()
-    local req = githubClient.httpClient:request(githubClient.client.gitapiurl .. "/git/refs/heads/" .. client.branch)
+githubClient.getRepoData = function(client)
+    local req = githubClient.httpClient:request(githubClient.client.gitapiurl .. "/git/refs/heads/" .. githubClient.client.branch)
     local data, _ = req:read(math.huge)
 
     githubClient.repo = {

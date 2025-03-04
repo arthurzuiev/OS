@@ -1,7 +1,8 @@
 -- sets global variables and functions
 local fs = component.proxy(component.list("filesystem")())
 
-local function load()
+local function boot_load()
+    computer.beep(2000, 0.5)
     _G.require = function(moduleName)
         local path = "/libraries/" .. moduleName .. ".lua" -- Ensure correct path
         
@@ -29,10 +30,10 @@ local function load()
             error("Error loading module " .. moduleName .. ": " .. loadErr)
         end
     
-        return func() -- Execute and return module's result
+        return func()
     end
 end
 
 return {
-    load = load
+    boot_load = boot_load
 }

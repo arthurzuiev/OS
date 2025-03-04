@@ -9,7 +9,7 @@ local currLine = 0
 local clearonNext = false
 
 -- boot sequence config
-local seqDelay = 0.1
+local seqDelay = 0.5
 local seuqnceCount = 0
 
 -- sys check
@@ -71,7 +71,7 @@ local function boot_the_loader(loader)
 
     fs.close(handle)
 
-    local func, loadErr = load(code, "=" .. loader)
+    local func, loadErr = load(code, "=" .. path)
 
     if not func then
         error("Error loading loader " .. loader .. ": " .. loadErr)
@@ -79,17 +79,17 @@ local function boot_the_loader(loader)
 
     gd_displayMessage(path)
 
-    return func
+    return func()
 end
 
 
 -- main function
 local function bootloader()
     gd_displayMessage("Boot init.")
-    
+    time_sleep(1)
     for seq = 0, seuqnceCount do
-        local loader = boot_the_loader("boot0" .. seq)
-        --loader.load()
+        local b = boot_the_loader("boot0" .. seq)
+        b.boot_load()
         time_sleep(seqDelay)
     end
 

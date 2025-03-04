@@ -56,3 +56,5 @@ githubClient.downloadTree = function(treeURL, parentDir)
         end
     end
 end
+
+return githubClient

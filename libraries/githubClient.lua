@@ -36,7 +36,7 @@ githubClient.getRepoData = function(client)
     return githubClient.repo
 end
 
-githubClient.downloadTree - function(treeURL, parentDir)
+githubClient.downloadTree = function(treeURL, parentDir)
     parentDir = parentDir or ""
     local treeData = json.decode(githubClient.request(treeDataURL))
 

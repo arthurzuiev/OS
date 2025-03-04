@@ -4,15 +4,15 @@ githubClient.httpClient = require("httpClient")
 githubClient.fs  = component.proxy(component.list("filesystem")())
 githubClient.json = require("json")
 
-githubclient.initClient = function(name, reponame, branch)
-    githubclient.client = {}
-    client.name = name
-    client.reponame = reponame
-    client.branch = branch or "master"
-    client.gitapiurl = "https://api.github.com/repos/" .. name .. "/" .. reponame
-    client.userrawdataurl = "https://raw.githubusercontent.com/" .. name .. "/" .. reponame .. "/" .. client.branch
-    client.branch = "master"
-    return client
+githubClient.initClient = function(name, reponame, branch)
+    githubClient.client = {}
+    githubClient.client.name = name
+    githubClient.client.reponame = reponame
+    githubClient.client.branch = branch or "master"
+    githubClient.client.gitapiurl = "https://api.github.com/repos/" .. name .. "/" .. reponame
+    githubClient.client.userrawdataurl = "https://raw.githubusercontent.com/" .. name .. "/" .. reponame .. "/" .. client.branch
+    githubClient.client.branch = "master"
+    return githubClient.client
 end
 
 github.ensureDirExists = function(filePath)

@@ -15,7 +15,7 @@ local seuqnceCount = 0
 -- sys check
 local function checkComponent(component, name)
     if not component then
-        error(name.." not found!")
+        error(name.." not found. Machine does not meet system requirements.")
     end
 end
 
@@ -89,7 +89,7 @@ local function bootloader()
     time_sleep(1)
     for seq = 0, seuqnceCount do
         local b = boot_the_loader("boot0" .. seq)
-        b.boot_load()
+        b.load()
         time_sleep(seqDelay)
     end
 

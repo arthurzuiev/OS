@@ -15,7 +15,7 @@ githubClient.initClient = function(name, reponame, branch)
     return githubClient.client
 end
 
-github.ensureDirExists = function(filePath)
+githubClient.ensureDirExists = function(filePath)
     local dir = fs.path(filePath)
     if not fs.exists(dir) then
         fs.makeDirectory(dir)

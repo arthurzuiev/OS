@@ -21,6 +21,7 @@ end
 
 -- preinit
 checkComponent(gpu, "GPU")
+checkComponent(fs, "Filesystem")
 
 local function gd_clearLine(line)
     gpu.set(1, line, string.rep(" ", initResolutionX))
@@ -56,23 +57,11 @@ local function time_sleep(seconds)
 end
 
 -- core functions
-local function openFile(path)
-    local file
-    local handle, path = fs.open(path, "r")
-
-    if not handle then
-        gd_displayMessage("reopening: "..path)
-        local handle = openFile(path)
-        time_sleep(1)
-    end
-
-    return handle
-end
 
 local function boot_the_loader(loader)
     local path = "/boot/" .. loader .. ".lua"
 
-    local handle openFile(path)
+    local handle, msg = fs.open(path, "r")
 
     local code = ""
     repeat

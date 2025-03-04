@@ -10,7 +10,7 @@ githubClient.initClient = function(name, reponame, branch)
     githubClient.client.reponame = reponame
     githubClient.client.branch = branch or "master"
     githubClient.client.gitapiurl = "https://api.github.com/repos/" .. name .. "/" .. reponame
-    githubClient.client.userrawdataurl = "https://raw.githubusercontent.com/" .. name .. "/" .. reponame .. "/" .. client.branch
+    githubClient.client.userrawdataurl = "https://raw.githubusercontent.com/" .. name .. "/" .. reponame .. "/" .. githubClient.client.branch
     githubClient.client.branch = "master"
     return githubClient.client
 end
@@ -22,7 +22,7 @@ githubClient.ensureDirExists = function(filePath)
     end
 end
 
-githubClient.getRepoData = function(client)
+githubClient.getRepoData = function()
     local req = githubClient.httpClient:request(githubClient.client.gitapiurl .. "/git/refs/heads/" .. client.branch)
     local data, _ = req:read(math.huge)
 

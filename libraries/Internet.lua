@@ -1,8 +1,3 @@
-
-local filesystem = require("Filesystem")
-
-----------------------------------------------------------------------------------------------------
-
 local function encode(data)
 	data = data:gsub("([^%w%-%_%.%~])", function(char)
 		return string.format("%%%02X", string.byte(char))

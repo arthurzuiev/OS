@@ -36,10 +36,11 @@ githubClient.getRepoData = function(client)
     return githubClient.repo
 end
 
-githubClient.downloadTree = function(treeURL, parentDir)
+githubClient.downloadTree = function(treeURL, parentDir, shell)
     parentDir = parentDir or ""
+    shell:print("Fething download data...")
     local treeData = json.decode(githubClient.request(treeDataURL))
-
+    shell:print("Downloading:")
     for _, child in ipairs(treeData.tree) do
         local filename = parentDir .. "/" .. child.path
 
@@ -50,7 +51,7 @@ githubClient.downloadTree = function(treeURL, parentDir)
         else
             -- It's a file, so download it and write it to the correct path
             githubClient.ensureDiExists(filename) -- Make sure the directory exists before writing the file
-            
+            shell:print("    " .. filename)
             local fileURL = "https://raw.githubusercontent.com/" .. githubClient.client.name .. "/" .. githubClient.client.repo .. "/" .. githubClient.client.branch .. "/" .. filename
             githubClient.httpClient.downloadFile(fileURL, filename)
         end

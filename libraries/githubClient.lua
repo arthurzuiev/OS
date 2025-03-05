@@ -22,10 +22,13 @@ githubClient.ensureDirExists = function(filePath)
     end
 end
 
-githubClient.getRepoData = function(client)
+githubClient.getRepoData = function(shell)
+    shell:print("Fetching repo data...")
     local req = githubClient.httpClient:request(githubClient.client.gitapiurl .. "/git/refs/heads/" .. githubClient.client.branch)
     local data, _ = req:read(math.huge)
+    shell:print(data)
 
+    shell:print("Parsing repo data...")
     githubClient.repo = {
         refs = githubClient.json.decode(data),
         commitData = refs.object.url,

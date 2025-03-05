@@ -26,9 +26,9 @@ githubClient.getRepoData = function(shell)
     shell:print("Fetching repo data...")
     local req = githubClient.httpClient:request(githubClient.client.gitapiurl .. "/git/refs/heads/" .. githubClient.client.branch)
     local data, _ = req:read(math.huge)
-    shell:print(data)
+    shell:print("Data type: " .. type(data))
+    shell:print("Raw Data: " .. tostring(data))
 
-    shell:print("Parsing repo data...")
     githubClient.repo = {
         refs = githubClient.json.decode(data),
         commitData = refs.object.url,

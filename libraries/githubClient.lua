@@ -24,7 +24,11 @@ end
 
 githubClient.getRepoData = function(shell)
     shell:print("Fetching repo data...")
-    local url = githubClient.client.gitapiurl .. "/git/refs/heads/" .. githubClient.client.branch
+    local apiurl = githubClient.client.gitapiurl
+    local additionURL = "/git/refs/heads/"
+    local branch = githubClient.client.branch
+
+    local url = apiurl .. additionURL .. branch
     shell:print("URL: " .. url)
     local req = githubClient.httpClient:request()
     shell:print("request made")

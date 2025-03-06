@@ -27,6 +27,7 @@ githubClient.getRepoData = function(shell)
     local additionURL = "/git/refs/heads/"..githubClient.client.branch
 
     local url = apiurl .. additionURL
+    urk = tostring(url)
     shell:print("URL: " .. url)
     local req, err = githubClient.httpClient:request(url)
     if err then

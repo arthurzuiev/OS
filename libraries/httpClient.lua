@@ -31,6 +31,8 @@ local function request(url, body, headers, timeout)
         sleep(0.05) 
     end
 
+    handle.finishConnect()
+
     return handle
 end
 

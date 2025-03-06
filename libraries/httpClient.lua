@@ -12,7 +12,7 @@ local function request(url, body, headers, timeout)
     local start = computer.uptime()
     
     while true do
-        local status, err = handle.finishConnect()
+        local status, err = handle:read(math.huge)
         
         if status then 
             break

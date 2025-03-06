@@ -29,7 +29,9 @@ githubClient.getRepoData = function(shell)
     local url = apiurl .. additionURL
     shell:print("URL: " .. url)
     local req, err = githubClient.httpClient:request(url)
-    shell:print(err)
+    if err then
+        error(err.." | " .. url)
+    end
     local data, _ = req:read(math.huge)
     shell:print("Data type: " .. type(data))
     shell:print("Raw Data: " .. tostring(data))

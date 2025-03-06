@@ -2,7 +2,6 @@ local internet = component.proxy(component.list("internet")())
 local fs = component.proxy(component.list("filesystem")())
 
 local function request(url, body, headers, timeout)
-    url = tostring(url)
     local handle, err = internet.request(url, body, headers)
     
     if not handle then

@@ -11,7 +11,6 @@ githubClient.initClient = function(name, reponame, branch)
     githubClient.client.branch = branch or "master"
     githubClient.client.gitapiurl = "https://api.github.com/repos/" .. name .. "/" .. reponame
     githubClient.client.userrawdataurl = "https://raw.githubusercontent.com/" .. name .. "/" .. reponame .. "/" .. githubClient.client.branch
-    githubClient.client.branch = "master"
     return githubClient.client
 end
 

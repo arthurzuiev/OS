@@ -17,7 +17,7 @@ local function request(url, body, headers, timeout)
             break
         end
         
-        if status == nil then
+        if err then
             return nil, ("request failed: %s"):format(err or "unknown error")
         end
         

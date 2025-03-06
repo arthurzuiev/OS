@@ -29,8 +29,8 @@ githubClient.getRepoData = function(shell)
 
     local url = apiurl .. additionURL
     shell:print("URL: " .. url)
-    local req = githubClient.httpClient:request()
-    shell:print("request made")
+    local req, err = githubClient.httpClient:request()
+    shell:print(err)
     local data, _ = req:read(math.huge)
     shell:print("Data type: " .. type(data))
     shell:print("Raw Data: " .. tostring(data))
@@ -45,7 +45,7 @@ githubClient.getRepoData = function(shell)
     return githubClient.repo
 end
 
-githubClient.downloadTree = function(treeURL, parentDir, shell)
+githubClient.downloadTree =  function(treeURL, parentDir, shell)
     parentDir = parentDir or ""
     shell:print("Fething download data...")
     local treeData = json.decode(githubClient.request(treeDataURL))

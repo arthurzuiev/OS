@@ -1,93 +1,88 @@
+local httpClient = require("httpClient")
+local fs = component.proxy(component.list("filesystem")())
+local json = require("json")
+
 local githubClient = {}
 
-githubClient.httpClient = require("httpClient")
-githubClient.fs  = component.proxy(component.list("filesystem")())
-githubClient.json = require("json")
-
-githubClient.initClient = function(name, reponame, branch)
-    githubClient.client = {}
-    githubClient.client.name = name
-    githubClient.client.reponame = reponame
-    githubClient.client.branch = branch or "master"
-    githubClient.client.gitapiurl = "https://api.github.com/repos/" .. name .. "/" .. reponame
-    githubClient.client.userrawdataurl = "https://raw.githubusercontent.com/" .. name .. "/" .. reponame .. "/" .. githubClient.client.branch
-    return githubClient.client
+function githubClient.initClient(user, repo, branch)
+    branch = branch or "main"
+    githubClient.client = {
+        user = user,
+        repo = repo,
+        branch = branch,
+        gitapiurl = "https://api.github.com/repos/"..user.."/"..repo,
+        rawBase = "https://raw.githubusercontent.com/"..user.."/"..repo.."/"..branch
+    }
 end
 
-githubClient.ensureDirExists = function(filePath)
-    local dir = fs.path(filePath)
-    if not fs.exists(dir) then
-        fs.makeDirectory(dir)
-    end
+function githubClient.ensureDirExists(path)
+    local dir = fs.path(path)
+    if not fs.exists(dir) then fs.makeDirectory(dir) end
 end
 
-githubClient.getRepoData = function(shell)
-    shell:print("Fetching repo data...")
-    local apiurl = githubClient.client.gitapiurl
-    local additionURL = "/git/refs/heads/"..githubClient.client.branch
+function githubClient.getRepoData(shell)
+    shell:print("Fetching repo refs...")
+    local url = githubClient.client.gitapiurl .. "/git/refs/heads/" .. githubClient.client.branch
+    shell:print("URL: "..url)
 
-    local url = apiurl .. additionURL
-    urlW = tostring(url)
-    shell:print("URL: " .. url)
-    local req, err = githubClient.httpClient:request(url)
-    if err then
-        error(err.." | " .. url)
-    end
-    shell:print("Request successful, reading data...")
-    local data, _ = req:read(math.huge)
-    shell:print("Data type: " .. type(data))
-    shell:print("Raw Data: " .. tostring(data))
+    local handle, err = httpClient.request(url)
+    if not handle then error(err) end
 
-   local refs = githubClient.json.decode(data)
-    -- refs is an array, take the first element
-    local firstRef = refs[1]
-    if not firstRef or not firstRef.object then
-        error("Unexpected API response structure")
+    local data, _ = handle:read(math.huge)
+    handle:close()
+
+    shell:print("Data type: "..type(data))
+    local refs = json.decode(data)
+    if type(refs) ~= "table" or not refs[1] or not refs[1].object then
+        error("Unexpected refs data structure")
     end
 
-    local commitURL = firstRef.object.url
-    local commitDataReq, err = githubClient.httpClient:request(commitURL)
-    if not commitDataReq then error(err) end
+    local commitURL = refs[1].object.url
+    shell:print("Fetching commit: "..commitURL)
 
-    local commitData, _ = commitDataReq:read(math.huge)
-    local commit = githubClient.json.decode(commitData)
-    local treeURL = commit.tree.url
+    local commitHandle, err2 = httpClient.request(commitURL)
+    if not commitHandle then error(err2) end
 
-    local treeURL = commit.tree.url
+    local commitData, _ = commitHandle:read(math.huge)
+    commitHandle:close()
+
+    local commit = json.decode(commitData)
+    if not commit.tree or not commit.tree.url then
+        error("Unexpected commit data structure")
+    end
 
     githubClient.repo = {
         refs = refs,
-        commitData = commitData,
         commit = commit,
-        treeURL = treeURL
+        treeURL = commit.tree.url
     }
-
 
     return githubClient.repo
 end
 
-githubClient.downloadTree =  function(treeURL, parentDir, shell)
-    parentDir = parentDir or ""
-    shell:print("Fething download data...")
+function githubClient.downloadTree(treeURL, parentDir, shell)
+    shell:print("Fetching tree: "..treeURL)
 
-    local treeData = githubClient.json.decode(
-        githubClient.httpClient:request(treeURL):read(math.huge)
-    )
+    local handle, err = httpClient.request(treeURL)
+    if not handle then error(err) end
 
-    shell:print("Downloading:")
+    local treeDataRaw, _ = handle:read(math.huge)
+    handle:close()
+
+    local treeData = json.decode(treeDataRaw)
+
     for _, child in ipairs(treeData.tree) do
-        local filename = parentDir .. "/" .. child.path
+        local filename = parentDir.."/"..child.path
 
         if child.type == "tree" then
-            -- It's a directory, so create it and recursively download its contents
             githubClient.ensureDirExists(filename)
-            githubClient.downloadTree(child.url, filename)
+            githubClient.downloadTree(child.url, filename, shell)
         else
-            -- It's a file, so download it and write it to the correct path
-            githubClient.ensureDirExists(filename) -- Make sure the directory exists before writing the file
-            shell:print("    " .. filename)
-            local fileURL = "https://raw.githubusercontent.com/" .. githubClient.client.name .. "/" .. githubClient.client.reponame .. "/" .. githubClient.client.branch .. "/" .. filename
-            githubClient.httpClient.downloadFile(fileURL, filename)
+            githubClient.ensureDirExists(filename)
+            shell:print("Downloading file: "..filename)
+            local fileURL = githubClient.client.rawBase .. "/" .. filename
+            local ok, err2 = httpClient.downloadFile(fileURL, filename)
+            if not ok then shell:print("Failed: "..tostring(err2)) end
         end
     end
 end

@@ -1,3 +1,6 @@
+local component = component
+local computer = computer
+
 local internet = component.proxy(component.list("internet")())
 local fs = component.proxy(component.list("filesystem")())
 
@@ -5,20 +8,18 @@ local function sleep(seconds)
     computer.pullSignal(seconds)
 end
 
-local function request(url, body, headers, timeout)
+local httpClient = {}
+
+function httpClient.request(url, body, headers, timeout)
     timeout = timeout or 5
     local handle, err = internet.request(url, body, headers)
-    if not handle then
-        return nil, ("request failed: %s"):format(err or "unknown error")
-    end
+    if not handle then return nil, "request failed: "..tostring(err) end
 
     local start = computer.uptime()
-
-    -- Wait for connection to finish
     while true do
         local ok, connErr = handle:finishConnect()
         if ok then break end
-        if connErr then return nil, ("request failed: %s"):format(connErr) end
+        if connErr then return nil, "request failed: "..tostring(connErr) end
         if computer.uptime() - start > timeout then
             handle.close()
             return nil, "request failed: connection timed out"
@@ -29,19 +30,13 @@ local function request(url, body, headers, timeout)
     return handle
 end
 
-local function downloadFile(url, path)
-    local handle, err = request(url, nil, nil, 10)
-    if not handle then
-        return nil, ("download failed: %s"):format(err)
-    end
+function httpClient.downloadFile(url, path)
+    local handle, err = httpClient.request(url, nil, nil, 10)
+    if not handle then return nil, "download failed: "..tostring(err) end
 
     local file = fs.open(path, "w")
-    if not file then
-        handle.close()
-        return nil, "failed to open file for writing"
-    end
+    if not file then handle.close(); return nil, "failed to open file for writing" end
 
-    -- Read full response
     while true do
         local chunk, readErr = handle:read(math.huge)
         if chunk then
@@ -49,7 +44,7 @@ local function downloadFile(url, path)
         elseif readErr then
             fs.close(file)
             handle.close()
-            return nil, ("download failed: %s"):format(readErr)
+            return nil, "download failed: "..tostring(readErr)
         else
             break
         end
@@ -60,7 +55,4 @@ local function downloadFile(url, path)
     return true
 end
 
-return {
-    request = request,
-    downloadFile = downloadFile
-}
+return httpClient

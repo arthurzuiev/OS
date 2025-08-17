@@ -1,3 +1,25 @@
+local httpClient = require("httpClient")
+local fs = component.proxy(component.list("filesystem")())
+local json = require("json")
+
+local githubClient = {}
+
+function githubClient.initClient(user, repo, branch)
+    branch = branch or "main"
+    githubClient.client = {
+        user = user,
+        repo = repo,
+        branch = branch,
+        gitapiurl = "https://api.github.com/repos/"..user.."/"..repo,
+        rawBase = "https://raw.githubusercontent.com/"..user.."/"..repo.."/"..branch
+    }
+end
+
+function githubClient.ensureDirExists(path)
+    local dir = fs.path(path)
+    if not fs.exists(dir) then fs.makeDirectory(dir) end
+end
+
 function githubClient.getRepoData(shell)
     shell:print("Fetching repo refs...")
     local url = githubClient.client.gitapiurl .. "/git/refs/heads/" .. githubClient.client.branch
@@ -84,3 +106,6 @@ function githubClient.downloadTree(treeURL, parentDir, shell)
         end
     end
 end
+
+
+return githubClient

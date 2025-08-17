@@ -28,7 +28,7 @@ function githubClient.getRepoData(shell)
     local handle, err = httpClient.request(url)
     if not handle then error(err) end
 
-    local data, _ = handle:read(math.huge)
+    local data, _ = handle:read(2^30)
     handle:close()
 
     shell:print("Data type: "..type(data))

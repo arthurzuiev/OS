@@ -32,7 +32,9 @@ function githubClient.getRepoData(shell)
     shell:print("no errors, reading data")
 
     local data, _ = handle:read(2^30)
+    shell:print("got data, closing handle")
     handle:close()
+    shell:print("Handle closed")
 
     shell:print("Data type: "..type(data))
     local refs = json.decode(data)

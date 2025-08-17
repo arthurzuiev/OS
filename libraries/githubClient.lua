@@ -33,14 +33,14 @@ function githubClient.getRepoData(shell)
 
     local data = ""
     shell:print("handle.read type: "..type(handle.read))
-    local chunk, readErr = handle.read(handle, 16384)
+    local chunk, readErr = handle:read(16384)   -- ✅ FIXED: colon call
     shell:print("first chunk type: "..type(chunk)..", first readErr type: "..type(readErr))
     while chunk do
         data = data .. chunk
-        chunk, readErr = handle.read(handle, 16384)
+        chunk, readErr = handle:read(16384)     -- ✅ FIXED
     end
     shell:print("finished reading, closing handle")
-    handle.close(handle)
+    handle:close()                             -- ✅ FIXED
     shell:print("Handle closed, data ready (type data: "..type(data)..")")
 
     local refs = json.decode(data)
@@ -56,9 +56,9 @@ function githubClient.getRepoData(shell)
     shell:print("commitHandle type: "..type(commitHandle)..", err2 type: "..type(err2))
     if not commitHandle then error(err2) end
 
-    local commitData, _ = commitHandle.read(commitHandle, 16384)
+    local commitData, _ = commitHandle:read(16384)  -- ✅ FIXED
     shell:print("commitData type: "..type(commitData))
-    commitHandle.close(commitHandle)
+    commitHandle:close()                            -- ✅ FIXED
 
     local commit = json.decode(commitData)
     shell:print("commit type: "..type(commit)..", commit.tree type: "..type(commit.tree))
@@ -74,6 +74,7 @@ function githubClient.getRepoData(shell)
 
     return githubClient.repo
 end
+
 
 function githubClient.downloadTree(treeURL, parentDir, shell)
     shell:print("Fetching tree: "..treeURL.." (type: "..type(treeURL)..")")

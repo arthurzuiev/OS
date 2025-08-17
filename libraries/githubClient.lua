@@ -33,13 +33,26 @@ githubClient.getRepoData = function(shell)
     if err then
         error(err.." | " .. url)
     end
+    shell:print("Request successful, reading data...")
     local data, _ = req:read(math.huge)
     shell:print("Data type: " .. type(data))
     shell:print("Raw Data: " .. tostring(data))
 
-    local refs = githubClient.json.decode(data)
-    local commitData = refs.object.url
+   local refs = githubClient.json.decode(data)
+    -- refs is an array, take the first element
+    local firstRef = refs[1]
+    if not firstRef or not firstRef.object then
+        error("Unexpected API response structure")
+    end
+
+    local commitURL = firstRef.object.url
+    local commitDataReq, err = githubClient.httpClient:request(commitURL)
+    if not commitDataReq then error(err) end
+
+    local commitData, _ = commitDataReq:read(math.huge)
     local commit = githubClient.json.decode(commitData)
+    local treeURL = commit.tree.url
+
     local treeURL = commit.tree.url
 
     githubClient.repo = {

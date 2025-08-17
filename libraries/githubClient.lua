@@ -31,10 +31,21 @@ function githubClient.getRepoData(shell)
     if not handle then error(err) end
     shell:print("no errors, reading data")
 
-    local data, _ = handle:read(2^30)
-    shell:print("got data, closing handle")
+    shell:print("getting handle")
+    local handle, err = httpClient.request(url)
+    shell:print("got result, checking for errors")
+    if not handle then error(err) end
+    shell:print("no errors, reading data")
+
+    local data = ""
+    local chunk, readErr = handle:read(16384)
+    while chunk do
+        data = data .. chunk
+        chunk, readErr = handle:read(16384)
+    end
     handle:close()
-    shell:print("Handle closed")
+    shell:print("Handle closed, data ready")
+
 
     shell:print("Data type: "..type(data))
     local refs = json.decode(data)

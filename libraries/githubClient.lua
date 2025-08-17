@@ -37,12 +37,18 @@ githubClient.getRepoData = function(shell)
     shell:print("Data type: " .. type(data))
     shell:print("Raw Data: " .. tostring(data))
 
+    local refs = githubClient.json.decode(data)
+    local commitData = refs.object.url
+    local commit = githubClient.json.decode(commitData)
+    local treeURL = commit.tree.url
+
     githubClient.repo = {
-        refs = githubClient.json.decode(data),
-        commitData = refs.object.url,
-        commit = json.decode(commitData),
-        treeURL = commit.tree.url
+        refs = refs,
+        commitData = commitData,
+        commit = commit,
+        treeURL = treeURL
     }
+
 
     return githubClient.repo
 end
@@ -50,20 +56,24 @@ end
 githubClient.downloadTree =  function(treeURL, parentDir, shell)
     parentDir = parentDir or ""
     shell:print("Fething download data...")
-    local treeData = json.decode(githubClient.request(treeDataURL))
+
+    local treeData = githubClient.json.decode(
+        githubClient.httpClient:request(treeURL):read(math.huge)
+    )
+
     shell:print("Downloading:")
     for _, child in ipairs(treeData.tree) do
         local filename = parentDir .. "/" .. child.path
 
         if child.type == "tree" then
             -- It's a directory, so create it and recursively download its contents
-            githubClient.ensureDiExists(filename)
+            githubClient.ensureDirExists(filename)
             githubClient.downloadTree(child.url, filename)
         else
             -- It's a file, so download it and write it to the correct path
-            githubClient.ensureDiExists(filename) -- Make sure the directory exists before writing the file
+            githubClient.ensureDirExists(filename) -- Make sure the directory exists before writing the file
             shell:print("    " .. filename)
-            local fileURL = "https://raw.githubusercontent.com/" .. githubClient.client.name .. "/" .. githubClient.client.repo .. "/" .. githubClient.client.branch .. "/" .. filename
+            local fileURL = "https://raw.githubusercontent.com/" .. githubClient.client.name .. "/" .. githubClient.client.reponame .. "/" .. githubClient.client.branch .. "/" .. filename
             githubClient.httpClient.downloadFile(fileURL, filename)
         end
     end

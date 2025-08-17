@@ -25,8 +25,11 @@ function githubClient.getRepoData(shell)
     local url = githubClient.client.gitapiurl .. "/git/refs/heads/" .. githubClient.client.branch
     shell:print("URL: "..url)
 
+    shell:print("getting handle")
     local handle, err = httpClient.request(url)
+    shell:print("got result, checking for errors")
     if not handle then error(err) end
+    shell:print("no errors, reading data")
 
     local data, _ = handle:read(2^30)
     handle:close()
